@@ -22,6 +22,8 @@ function resume() {
     wasmExports.main();
 }
 
+let pointer = 0;
+
 const instance = new WebAssembly.Instance(compiled, {
     env: {
         writeString(ptr) {
@@ -41,11 +43,26 @@ const instance = new WebAssembly.Instance(compiled, {
             console.log(string + String.fromCharCode(...memoryU16.subarray(start, end)));
         },
         readString() {
-            const value = "Hello from as-bridge!";
-            if (value == null) return 0;
-            const length = value.length;
-            const pointer = wasmExports.__new(length << 1, 2) >>> 0;
-            for (let i = 0; i < length; ++i) memoryU16[(pointer >>> 1) + i] = value.charCodeAt(i);
+            if (paused) {
+                wasmExports.asyncify_stop_rewind();
+                paused = false;
+                return pointer;
+            } else {
+                const value = "Hello from as-bridge!";
+                const length = value.length;
+                pointer = wasmExports.__new(length << 1, 2) >>> 0;
+                for (let i = 0; i < length; ++i) memoryU16[(pointer >>> 1) + i] = value.charCodeAt(i);
+
+                memoryU32[DATA_ADDR >> 2] = DATA_ADDR + 8;
+                memoryU32[DATA_ADDR + 4 >> 2] = 1024;
+                wasmExports.asyncify_start_unwind(DATA_ADDR);
+                paused = true;
+            }
+            setTimeout(function () {
+                wasmExports.asyncify_start_rewind(DATA_ADDR);
+                wasmExports.main();
+            }, 2000);
+            console.log(pointer);
             return pointer;
         },
         sleep: function (ms) {

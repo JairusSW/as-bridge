@@ -6,15 +6,9 @@ async function instantiate(module, imports = {}) {
         str = __liftString(str >>> 0);
         writeString(str);
       },
-      sleep(ms) {
-        // assembly/test/sleep(u32) => void
-        ms = ms >>> 0;
-        sleep(ms);
-      },
-      writeFromPtr(ptr) {
-        // assembly/test/writeFromPtr(usize) => void
-        ptr = ptr >>> 0;
-        writeFromPtr(ptr);
+      readString() {
+        // assembly/test/readString() => ~lib/string/String
+        return __lowerString(readString()) || __notnull();
       },
       abort(message, fileName, lineNumber, columnNumber) {
         // ~lib/builtins/abort(~lib/string/String | null?, ~lib/string/String | null?, u32?, u32?) => void
@@ -41,6 +35,18 @@ async function instantiate(module, imports = {}) {
       string = "";
     while (end - start > 1024) string += String.fromCharCode(...memoryU16.subarray(start, start += 1024));
     return string + String.fromCharCode(...memoryU16.subarray(start, end));
+  }
+  function __lowerString(value) {
+    if (value == null) return 0;
+    const
+      length = value.length,
+      pointer = exports.__new(length << 1, 2) >>> 0,
+      memoryU16 = new Uint16Array(memory.buffer);
+    for (let i = 0; i < length; ++i) memoryU16[(pointer >>> 1) + i] = value.charCodeAt(i);
+    return pointer;
+  }
+  function __notnull() {
+    throw TypeError("value must not be null");
   }
   return exports;
 }
