@@ -9,7 +9,7 @@ declare function sleep(ms: u32): void;
 
 let str = "Hello from AssemblyScript through as-bridge!";
 export function main(): void {
-    writeString(str);
+    writeString(str); 
     str = readString();
     //writeString("Sleeping now!");
     //sleep(2000);
