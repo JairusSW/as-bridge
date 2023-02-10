@@ -62,7 +62,6 @@ const instance = new WebAssembly.Instance(compiled, {
                 wasmExports.asyncify_start_rewind(DATA_ADDR);
                 wasmExports.main();
             }, 2000);
-            console.log(pointer);
             return pointer;
         },
         sleep: function (ms) {
